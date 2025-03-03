@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Misiones</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: auto;
+            text-align: center;
+        }
+        input, button {
+            margin: 5px;
+            padding: 8px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin: 10px 0;
+            padding: 5px;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Misiones</h1>
+    <input type="text" id="titulo" placeholder="Título">
+    <input type="text" id="descripcion" placeholder="Descripción">
+    <button onclick="agregarMision()">Agregar Misión</button>
+    <ul id="listaMisiones"></ul>
+
+    <script>
+        async function cargarMisiones() {
+            try {
+                const res = await fetch('/misiones');
+                if (!res.ok) throw new Error('Error al cargar misiones');
+                const misiones = await res.json();
+                const lista = document.getElementById('listaMisiones');
+                lista.innerHTML = '';
+                misiones.forEach(m => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${m.titulo} - ${m.descripcion}</span> <button onclick="eliminarMision(${m.id})">X</button>`;
+                    lista.appendChild(li);
+                });
+            } catch (error) {
+                console.error(error);
+                alert('No se pudieron cargar las misiones');
+            }
+        }
+
+        async function agregarMision() {
+            const titulo = document.getElementById('titulo').value.trim();
+            const descripcion = document.getElementById('descripcion').value.trim();
+            if (!titulo || !descripcion) return alert('Faltan datos');
+            try {
+                const res = await fetch('/misiones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo, descripcion })
+                });
+                if (!res.ok) throw new Error('Error al agregar misión');
+                document.getElementById('titulo').value = '';
+                document.getElementById('descripcion').value = '';
+                cargarMisiones();
+            } catch (error) {
+                console.error(error);
+                alert('No se pudo agregar la misión');
+            }
+        }
+
+        async function eliminarMision(id) {
+            try {
+                const res = await fetch(`/misiones/${id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Error al eliminar misión');
+                cargarMisiones();
+            } catch (error) {
+                console.error(error);
+                alert('No se pudo eliminar la misión');
+            }
+        }
+
+        cargarMisiones();
+    </script>
+</body>
+</html>
